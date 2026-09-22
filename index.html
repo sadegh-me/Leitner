@@ -1649,7 +1649,9 @@ function handleTool(type){
   const dictEl=document.getElementById('p-dict');
   
   if(type==='pronounce'){
-    speakText(card.word,'en');
+    // Only speak English word, never meaning, to avoid reading commas or English in Persian answer
+    const toSpeak = card.word ? card.word.split('/')[0].split(',')[0].trim() : '';
+    if(toSpeak) speakText(toSpeak,'en');
     btnPron.classList.add('active');
     setTimeout(()=>btnPron.classList.remove('active'),800);
   }
@@ -1657,7 +1659,7 @@ function handleTool(type){
     currentCardState.showAnswer=!currentCardState.showAnswer;
     meaningEl.style.display=currentCardState.showAnswer?'block':'none';
     btnAns.classList.toggle('active',currentCardState.showAnswer);
-    if(currentCardState.showAnswer) speakText(card.meaning,'fa');
+    // No auto TTS for answer to avoid reading English words in Persian meaning
   }
   else if(type==='content'){
     currentCardState.showContent=!currentCardState.showContent;
