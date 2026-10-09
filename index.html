@@ -1382,92 +1382,57 @@ function savePracticeSettings(){
 let practiceSettings=loadPracticeSettings();
 
 function buildQueueByPercent(filtered){
-  const b1=filtered.filter(c=>c.box===1);
-  const b2=filtered.filter(c=>c.box===2);
-  const b3=filtered.filter(c=>c.box===3);
+  // Split cards by Leitner box
+  const groups={1:filtered.filter(c=>c.box===1),2:filtered.filter(c=>c.box===2),3:filtered.filter(c=>c.box===3)};
   const total=filtered.length;
   if(total===0) return [];
-  
-  let p1=practiceSettings.p1, p2=practiceSettings.p2, p3=practiceSettings.p3;
-  const sum=p1+p2+p3;
-  if(sum===0){p1=34;p2=33;p3=33;}
-  
-  // Calculate desired counts based on percentages
-  let c1_desired=Math.round(total * p1/100);
-  let c2_desired=Math.round(total * p2/100);
-  let c3_desired=total - c1_desired - c2_desired;
-  // Ensure non-negative
-  c1_desired=Math.max(0,c1_desired);
-  c2_desired=Math.max(0,c2_desired);
-  c3_desired=Math.max(0,c3_desired);
-  
-  // Clamp to available, without redistributing to keep percentage ratio
-  let c1=Math.min(c1_desired, b1.length);
-  let c2=Math.min(c2_desired, b2.length);
-  let c3=Math.min(c3_desired, b3.length);
-  
-  // If user wants to practice all cards proportionally ordered, not limited, we have two modes:
-  // If percentages sum to 100 and user has cards in all boxes, we use desired counts (subset)
-  // To include all cards but ordered by percentage, we will build queue with ALL cards interleaved by ratio
-  // Let's use interleaved ALL approach for better UX: include all filtered cards, ordered by percentage ratio
-  
-  let useAll = true; // if true, include all cards ordered by ratio
-  let q1_all = practiceSettings.shuffle ? [...b1].sort(()=>Math.random()-0.5) : [...b1];
-  let q2_all = practiceSettings.shuffle ? [...b2].sort(()=>Math.random()-0.5) : [...b2];
-  let q3_all = practiceSettings.shuffle ? [...b3].sort(()=>Math.random()-0.5) : [...b3];
-  
-  if(useAll){
-    // Interleave ALL cards by percentage weights
-    let queue=[];let i1=0,i2=0,i3=0;
-    const take1 = p1>0 ? Math.max(1, Math.round(p1/10)) : 0;
-    const take2 = p2>0 ? Math.max(1, Math.round(p2/10)) : 0;
-    const take3 = p3>0 ? Math.max(1, Math.round(p3/10)) : 0;
-    // If all zero, just concat
-    if(p1===0 && p2===0 && p3===0){
-      queue=[...q1_all,...q2_all,...q3_all];
-    }else{
-      // Weighted round-robin: repeat taking take1 from b1, take2 from b2, take3 from b3
-      let maxIter = total*2; // safety
-      let iter=0;
-      while((i1<q1_all.length || i2<q2_all.length || i3<q3_all.length) && iter<maxIter){
-        iter++;
-        if(p1>0) for(let k=0;k<take1 && i1<q1_all.length;k++) queue.push(q1_all[i1++]);
-        if(p2>0) for(let k=0;k<take2 && i2<q2_all.length;k++) queue.push(q2_all[i2++]);
-        if(p3>0) for(let k=0;k<take3 && i3<q3_all.length;k++) queue.push(q3_all[i3++]);
-        // If some box has 0%, but still has cards, add them at end
-        if(take1===0 && i1<q1_all.length && i2>=q2_all.length && i3>=q3_all.length){
-          while(i1<q1_all.length) queue.push(q1_all[i1++]);
-        }
-        if(take2===0 && i2<q2_all.length && i1>=q1_all.length && i3>=q3_all.length){
-          while(i2<q2_all.length) queue.push(q2_all[i2++]);
-        }
-        if(take3===0 && i3<q3_all.length && i1>=q1_all.length && i2>=q2_all.length){
-          while(i3<q3_all.length) queue.push(q3_all[i3++]);
-        }
-      }
-      // Add any remaining (should be none)
-      while(i1<q1_all.length) queue.push(q1_all[i1++]);
-      while(i2<q2_all.length) queue.push(q2_all[i2++]);
-      while(i3<q3_all.length) queue.push(q3_all[i3++]);
-    }
-    console.log(`Practice queue built: total=${total} b1=${b1.length} b2=${b2.length} b3=${b3.length} p=${p1}/${p2}/${p3} queue=${queue.length}`);
-    return queue;
-  }else{
-    // Subset mode: only take desired counts
-    let q1 = practiceSettings.shuffle ? [...b1].sort(()=>Math.random()-0.5).slice(0, c1) : b1.slice(0, c1);
-    let q2 = practiceSettings.shuffle ? [...b2].sort(()=>Math.random()-0.5).slice(0, c2) : b2.slice(0, c2);
-    let q3 = practiceSettings.shuffle ? [...b3].sort(()=>Math.random()-0.5).slice(0, c3) : b3.slice(0, c3);
-    let queue=[];let i1=0,i2=0,i3=0;
-    const take1 = p1>0 ? Math.max(1, Math.round(p1/10)) : 0;
-    const take2 = p2>0 ? Math.max(1, Math.round(p2/10)) : 0;
-    const take3 = p3>0 ? Math.max(1, Math.round(p3/10)) : 0;
-    while(i1<q1.length || i2<q2.length || i3<q3.length){
-      if(p1>0) for(let k=0;k<take1 && i1<q1.length;k++) queue.push(q1[i1++]);
-      if(p2>0) for(let k=0;k<take2 && i2<q2.length;k++) queue.push(q2[i2++]);
-      if(p3>0) for(let k=0;k<take3 && i3<q3.length;k++) queue.push(q3[i3++]);
-    }
-    return queue;
+  let p1=practiceSettings.p1,p2=practiceSettings.p2,p3=practiceSettings.p3;
+  if(p1+p2+p3===0){p1=34;p2=33;p3=33;}
+  const avail={1:groups[1].length,2:groups[2].length,3:groups[3].length};
+  // Base for the percentages: the number of cards that have LEFT box 1 (the
+  // "practiced" cards now sitting in box 2 or 3). Anchoring the percentages to
+  // the practiced pool keeps the big "don't know" box from dominating the session.
+  // If no card has left box 1 yet, fall back to all cards so the session can start.
+  let base=avail[2]+avail[3];
+  if(base===0) base=total;
+  // Take from each box its percentage share of the base, capped by how many cards
+  // the box actually has. A box set to 0% is skipped entirely (so 100% on one box
+  // means only that box is practiced). Leftover cards rotate into future sessions
+  // because the queue is rebuilt automatically at session end.
+  const take={
+    1: (p1>0 && avail[1]>0) ? Math.max(1, Math.min(avail[1], Math.round(base*p1/100))) : 0,
+    2: (p2>0 && avail[2]>0) ? Math.max(1, Math.min(avail[2], Math.round(base*p2/100))) : 0,
+    3: (p3>0 && avail[3]>0) ? Math.max(1, Math.min(avail[3], Math.round(base*p3/100))) : 0,
+  };
+  const sumTake=take[1]+take[2]+take[3];
+  if(sumTake===0) return [];
+  // Pick the cards. When taking fewer than available, pick a random subset so the
+  // leftover cards rotate into future sessions.
+  const picked={};
+  for(const b of [1,2,3]){
+    let arr=[...groups[b]];
+    if(practiceSettings.shuffle || take[b]<arr.length) arr=arr.sort(()=>Math.random()-0.5);
+    picked[b]=arr.slice(0,take[b]);
   }
+  // Smooth weighted round-robin: interleave the picked cards by their ACTUAL counts
+  // so each box appears in proportion to its percentage and cards from the same box
+  // are spread evenly across the whole session (no blocks, no long runs).
+  const weights={1:picked[1].length,2:picked[2].length,3:picked[3].length};
+  const cur={1:0,2:0,3:0};
+  const idx={1:0,2:0,3:0};
+  const queue=[];
+  let safety=sumTake+16;
+  while(queue.length<sumTake && safety-->0){
+    const boxes=[1,2,3].filter(b=>idx[b]<picked[b].length);
+    if(!boxes.length) break;
+    const totalW=boxes.reduce((s,b)=>s+weights[b],0);
+    let best=boxes[0];
+    for(const b of boxes){cur[b]+=weights[b]; if(cur[b]>cur[best]) best=b;}
+    cur[best]-=totalW;
+    queue.push(picked[best][idx[best]++]);
+  }
+  console.log(`Practice queue: avail=${avail[1]}/${avail[2]}/${avail[3]} practiced(base)=${base} p=${p1}/${p2}/${p3} take=${take[1]}/${take[2]}/${take[3]} queue=${queue.length}`);
+  return queue;
 }
 
 function startPracticeSession(){

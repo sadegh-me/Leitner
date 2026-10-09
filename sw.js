@@ -1,4 +1,4 @@
-const CACHE_NAME = 'leitner-v7-no-tts-answer';
+const CACHE_NAME = 'leitner-v11-practiced-base';
 const ASSETS = [
   './',
   './index.html',
