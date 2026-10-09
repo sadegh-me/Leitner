@@ -1392,9 +1392,14 @@ function buildQueueByPercent(filtered){
   // Base for the percentages: the number of cards that have LEFT box 1 (the
   // "practiced" cards now sitting in box 2 or 3). Anchoring the percentages to
   // the practiced pool keeps the big "don't know" box from dominating the session.
-  // If no card has left box 1 yet, fall back to all cards so the session can start.
+  // The base has a minimum of 6: once about 6 cards have left box 1, the
+  // percentages are computed from exactly those cards, and below that the mix
+  // still keeps its percentage shape. If no card has left box 1 yet, fall back
+  // to all cards so the session can start.
+  const MIN_PRACTICED_BASE=6;
   let base=avail[2]+avail[3];
   if(base===0) base=total;
+  else if(base<MIN_PRACTICED_BASE) base=MIN_PRACTICED_BASE;
   // Take from each box its percentage share of the base, capped by how many cards
   // the box actually has. A box set to 0% is skipped entirely (so 100% on one box
   // means only that box is practiced). Leftover cards rotate into future sessions

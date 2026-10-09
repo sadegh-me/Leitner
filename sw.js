@@ -1,4 +1,4 @@
-const CACHE_NAME = 'leitner-v11-practiced-base';
+const CACHE_NAME = 'leitner-v12-min-base-6';
 const ASSETS = [
   './',
   './index.html',
