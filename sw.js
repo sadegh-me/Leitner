@@ -1,4 +1,4 @@
-const CACHE_NAME = 'leitner-v12-min-base-6';
+const CACHE_NAME = 'leitner-v13-box-btn';
 const ASSETS = [
   './',
   './index.html',

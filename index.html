@@ -237,8 +237,9 @@ button{font:inherit}
 .action-btn:active{}
 .action-btn.dontknow{background:var(--surface);color:var(--text);border-color:var(--border)}
 .action-btn.more{background:var(--bg-soft);color:var(--text);border-color:var(--border)}
-.action-btn.know{background:var(--teal-dark);color:white;box-shadow:0 6px 16px rgba(0,76,76,0.2)}
-[data-theme="dark"] .action-btn.know{background:var(--teal-mid)}
+.action-btn.know{background:var(--surface);color:var(--text);border-color:var(--border)}
+.action-btn.current{background:var(--teal-dark);color:white;box-shadow:0 6px 16px rgba(0,76,76,0.2)}
+[data-theme="dark"] .action-btn.current{background:var(--teal-mid)}
 .practice-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px 20px;background:var(--surface);border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow)}
 .finish-card{background:var(--surface);border-radius:24px;padding:28px 20px;text-align:center;box-shadow:var(--shadow-lg);border:1px solid var(--border);width:100%}
 .toggle-row{display:flex;justify-content:space-between;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 14px;box-shadow:var(--shadow);margin-bottom:10px}
@@ -406,9 +407,9 @@ button{font:inherit}
       </div>
     </div>
     <div id="practice-actions" class="practice-actions minimal">
-      <button class="action-btn dontknow" onclick="answerCard(1)"><span>بلد نیستم</span></button>
-      <button class="action-btn more" onclick="answerCard(2)"><span>تمرین بیشتر</span></button>
-      <button class="action-btn know" onclick="answerCard(3)"><span>یاد گرفتم</span></button>
+      <button class="action-btn dontknow" data-box="1" onclick="answerCard(1)"><span>بلد نیستم</span></button>
+      <button class="action-btn more" data-box="2" onclick="answerCard(2)"><span>تمرین بیشتر</span></button>
+      <button class="action-btn know" data-box="3" onclick="answerCard(3)"><span>یاد گرفتم</span></button>
     </div>
     <div style="height:90px"></div>
   </div>
@@ -1565,6 +1566,10 @@ function showCurrentCard(){
     if(boxBadge){
       boxBadge.textContent=`باکس ${card.box}`;
     }
+    // Highlight the answer button matching the card's current box (others stay neutral)
+    document.querySelectorAll('#practice-actions .action-btn').forEach(btn=>{
+      btn.classList.toggle('current', parseInt(btn.dataset.box)===card.box);
+    });
     
     // Indicators - minimal
     const fills = {
